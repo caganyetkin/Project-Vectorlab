@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vectorlab | Planetary Analog Mapper — NASA Space Apps Challenge</title>
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        space: {
+                            950: '#030712',
+                            900: '#0b1120',
+                            800: '#111827',
+                            700: '#1f2937'
+                        },
+                        neon: {
+                            cyan: '#06b6d4',
+                            blue: '#3b82f6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Leaflet.js CSS via CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- Leaflet.js JavaScript via CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Lucide Icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Local Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-space-950 text-slate-100 font-sans antialiased h-screen flex flex-col overflow-hidden select-none">
+
+    <!-- ==========================================
+         TOP NAVIGATION BAR
+         ========================================== -->
+    <header id="top-navbar" class="h-16 bg-space-900/80 backdrop-blur-md border-b border-slate-800/80 px-6 flex items-center justify-between z-30 shrink-0">
+        
+        <!-- Brand Identity -->
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                <i data-lucide="orbit" class="w-6 h-6 text-cyan-400"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <h1 class="text-lg font-bold tracking-wider uppercase text-white">Vectorlab</h1>
+                    <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                        v1.0
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 font-mono tracking-wide">Planetary Analog Mapper</p>
+            </div>
+        </div>
+
+        <!-- Quick Filter / Target Environment Selector Placeholders -->
+        <nav aria-label="Target Body Filter" class="hidden md:flex items-center gap-1 bg-space-950/90 p-1 rounded-lg border border-slate-800">
+            <button id="filter-all" class="filter-btn active px-3 py-1.5 rounded-md text-xs font-mono font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition">
+                ALL ANALOGS
+            </button>
+            <button id="filter-mars" class="filter-btn px-3 py-1.5 rounded-md text-xs font-mono font-medium text-slate-400 hover:text-slate-200 transition">
+                MARS TARGETS
+            </button>
+            <button id="filter-moon" class="filter-btn px-3 py-1.5 rounded-md text-xs font-mono font-medium text-slate-400 hover:text-slate-200 transition">
+                LUNAR TARGETS
+            </button>
+        </nav>
+
+        <!-- Active Status Badge & Telemetry Uplink -->
+        <div class="flex items-center gap-4">
+            <div id="status-badge" class="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-mono font-medium text-emerald-400 tracking-wider uppercase">
+                    System Online // Telemetry Active
+                </span>
+            </div>
+        </div>
+
+    </header>
+
+    <!-- ==========================================
+         MAIN CONTENT AREA (Responsive Grid)
+         ========================================== -->
+    <main id="dashboard-main" class="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative">
+
+        <!-- LEFT / CENTER SECTION: Interactive Map Container -->
+        <section id="map-section" aria-label="Interactive Planetary Analog Map" class="lg:col-span-8 xl:col-span-8 relative h-full w-full bg-space-950 flex flex-col">
+            
+            <!-- Map HUD Overlay: Top-Left Coordinates & Layer Status -->
+            <div id="map-hud-top" class="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-2">
+                <div class="bg-space-900/85 backdrop-blur-md border border-slate-800 px-3.5 py-2 rounded-lg shadow-lg pointer-events-auto flex items-center gap-3">
+                    <i data-lucide="globe-2" class="w-4 h-4 text-cyan-400"></i>
+                    <div class="text-xs font-mono">
+                        <span class="text-slate-400">CRS:</span> <span id="hud-crs" class="text-slate-200">WGS84 / EPSG:4326</span>
+                        <span class="mx-2 text-slate-700">|</span>
+                        <span class="text-slate-400">COORDS:</span> <span id="hud-coords" class="text-cyan-400">00.0000° N, 00.0000° E</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map HUD Overlay: Bottom-Left Reset & Controls Placeholder -->
+            <div id="map-hud-controls" class="absolute bottom-6 left-4 z-20 flex items-center gap-2">
+                <button id="btn-reset-map" type="button" class="bg-space-900/90 hover:bg-space-800 backdrop-blur-md border border-slate-700 hover:border-cyan-500/50 text-slate-200 px-3.5 py-2 rounded-lg text-xs font-mono flex items-center gap-2 shadow-lg transition">
+                    <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    <span>RESET ORBITAL VIEW</span>
+                </button>
+            </div>
+
+            <!-- Primary Leaflet Map Container -->
+            <div id="map" class="w-full h-full z-10"></div>
+
+        </section>
+
+        <!-- RIGHT SECTION: Dynamic Info Panel -->
+        <aside id="info-panel" aria-label="Analog Site Scientific Data Panel" class="lg:col-span-4 xl:col-span-4 h-full bg-space-900/95 backdrop-blur-xl border-l border-slate-800/90 flex flex-col overflow-y-auto z-20">
+
+            <!-- Panel Header -->
+            <div id="panel-header" class="p-6 border-b border-slate-800/80 shrink-0">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="site-target-badge" class="text-[11px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                        Awaiting Selection
+                    </span>
+                    <span id="site-id-code" class="text-xs font-mono text-slate-400">ID: VL-000</span>
+                </div>
+                <h2 id="site-title" class="text-xl font-bold text-white tracking-tight">Select an Analog Location</h2>
+                <p id="site-location-subtitle" class="text-xs font-mono text-slate-400 mt-1 flex items-center gap-1.5">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    <span id="site-coordinates-text">Click a glowing marker on the map to inspect telemetry</span>
+                </p>
+            </div>
+
+            <!-- Panel Body: Dynamic Content Container -->
+            <div id="panel-content" class="p-6 space-y-6 flex-1">
+
+                <!-- Overview / Geological Summary Card -->
+                <div id="card-overview" class="bg-space-950/60 border border-slate-800/80 rounded-xl p-4">
+                    <h3 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
+                        <i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i>
+                        <span>Geological & Climatic Profile</span>
+                    </h3>
+                    <p id="site-description" class="text-sm text-slate-300 leading-relaxed">
+                        Vectorlab correlates terrestrial extreme environments with lunar and Martian landing sites. Select an active pin on the globe to load comparative mineralogical, atmospheric, and astrobiological metrics.
+                    </p>
+                </div>
+
+                <!-- Comparative Metrics Grid (Earth vs. Target Body) -->
+                <div id="card-metrics" class="space-y-3">
+                    <h3 class="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i>
+                        <span>Comparative Environmental Telemetry</span>
+                    </h3>
+
+                    <div id="metrics-grid" class="grid grid-cols-2 gap-3">
+                        <!-- Metric Placeholder 1 -->
+                        <div class="bg-space-950/60 border border-slate-800/80 rounded-lg p-3">
+                            <span class="text-[11px] font-mono text-slate-400 block">MEAN SURFACE TEMP</span>
+                            <span id="metric-temp-earth" class="text-base font-mono font-semibold text-white mt-1 block">-- °C</span>
+                            <span id="metric-temp-target" class="text-[11px] font-mono text-cyan-400 mt-0.5 block">Target: -- °C</span>
+                        </div>
+
+                        <!-- Metric Placeholder 2 -->
+                        <div class="bg-space-950/60 border border-slate-800/80 rounded-lg p-3">
+                            <span class="text-[11px] font-mono text-slate-400 block">ARIDITY / PRECIPITATION</span>
+                            <span id="metric-arid-earth" class="text-base font-mono font-semibold text-white mt-1 block">-- mm/yr</span>
+                            <span id="metric-arid-target" class="text-[11px] font-mono text-cyan-400 mt-0.5 block">Target: --</span>
+                        </div>
+
+                        <!-- Metric Placeholder 3 -->
+                        <div class="bg-space-950/60 border border-slate-800/80 rounded-lg p-3">
+                            <span class="text-[11px] font-mono text-slate-400 block">REGOLITH SIMILARITY</span>
+                            <span id="metric-soil-score" class="text-base font-mono font-semibold text-white mt-1 block">-- %</span>
+                            <span id="metric-soil-type" class="text-[11px] font-mono text-cyan-400 mt-0.5 block">Type: --</span>
+                        </div>
+
+                        <!-- Metric Placeholder 4 -->
+                        <div class="bg-space-950/60 border border-slate-800/80 rounded-lg p-3">
+                            <span class="text-[11px] font-mono text-slate-400 block">RADIATION / UV FLUX</span>
+                            <span id="metric-uv-earth" class="text-base font-mono font-semibold text-white mt-1 block">-- W/m²</span>
+                            <span id="metric-uv-target" class="text-[11px] font-mono text-cyan-400 mt-0.5 block">Target: --</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soil & Mineralogical Composition Section -->
+                <div id="card-soil-composition" class="bg-space-950/60 border border-slate-800/80 rounded-xl p-4">
+                    <h3 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                        <i data-lucide="microscope" class="w-4 h-4 text-cyan-400"></i>
+                        <span>Soil & Regolith Composition</span>
+                    </h3>
+                    <div id="soil-composition-list" class="space-y-3 text-xs font-mono">
+                        <p class="text-slate-500 italic">No site selected. Mineralogical breakdown will populate here.</p>
+                    </div>
+                </div>
+
+                <!-- Mission Testing Relevance Section -->
+                <div id="card-mission-relevance" class="bg-space-950/60 border border-slate-800/80 rounded-xl p-4">
+                    <h3 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
+                        <i data-lucide="rocket" class="w-4 h-4 text-cyan-400"></i>
+                        <span>NASA Mission Testing Relevance</span>
+                    </h3>
+                    <ul id="mission-relevance-list" class="space-y-2 text-xs text-slate-300 list-disc list-inside">
+                        <li class="text-slate-500">Select an analog site to view hardware and EVA validation protocols.</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Panel Footer -->
+            <footer id="panel-footer" class="p-4 border-t border-slate-800/80 bg-space-950/50 flex items-center justify-between text-[11px] font-mono text-slate-500 shrink-0">
+                <span>NASA SPACE APPS // VECTORLAB</span>
+                <span id="telemetry-timestamp">UTC: --:--:--</span>
+            </footer>
+
+        </aside>
+
+    </main>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <!-- External Application Logic Placeholder -->
+    <script src="app.js" defer></script>
+</body>
+</html>

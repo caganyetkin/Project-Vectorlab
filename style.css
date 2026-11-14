@@ -1,0 +1,430 @@
+/* ==========================================================================
+   VECTORLAB | PLANETARY ANALOG MAPPER — NASA SPACE APPS CHALLENGE
+   Stylesheet: style.css
+   Theme: Deep Space Dark Mode, Glassmorphism & Neon Telemetry Accents
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. ROOT VARIABLES & DESIGN TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+    /* Deep Space Palette */
+    --bg-space-deep: #050811;
+    --bg-space-slate: #0b0f19;
+    --bg-glass-surface: rgba(11, 15, 25, 0.72);
+    --bg-glass-card: rgba(17, 24, 39, 0.55);
+    --bg-glass-hover: rgba(31, 41, 55, 0.65);
+
+    /* Neon Telemetry Accents */
+    --neon-cyan: #06b6d4;
+    --neon-cyan-glow: rgba(6, 182, 212, 0.45);
+    --neon-cyan-subtle: rgba(6, 182, 212, 0.15);
+    --neon-blue: #3b82f6;
+    --neon-blue-glow: rgba(59, 130, 246, 0.45);
+    --neon-mars: #f97316;
+    --neon-mars-glow: rgba(249, 115, 22, 0.45);
+    --neon-emerald: #10b981;
+
+    /* Borders & Dividers */
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --border-cyan: rgba(6, 182, 212, 0.35);
+    --border-blue: rgba(59, 130, 246, 0.35);
+
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Transitions */
+    --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. GLOBAL RESET, BACKGROUND & TYPOGRAPHY
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 0%, #111a2e 0%, var(--bg-space-slate) 45%, var(--bg-space-deep) 100%);
+    color: #f1f5f9;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+}
+
+/* Subtle Ambient Starfield / Telemetry Grid Overlay */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: 
+        linear-gradient(to right, rgba(6, 182, 212, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(6, 182, 212, 0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+h1, h2, h3, h4, .font-futuristic {
+    letter-spacing: 0.03em;
+}
+
+.font-mono {
+    font-family: var(--font-mono);
+    font-feature-settings: "zero" 1, "ss01" 1;
+}
+
+/* Text Selection Styling */
+::selection {
+    background: rgba(6, 182, 212, 0.25);
+    color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   3. GLASSMORPHISM UTILITY CLASSES (.glass-card & variants)
+   -------------------------------------------------------------------------- */
+.glass-card {
+    background: var(--bg-glass-card);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    box-shadow: 
+        0 8px 32px 0 rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    transition: var(--transition-smooth);
+}
+
+.glass-card:hover {
+    background: var(--bg-glass-hover);
+    border-color: var(--border-cyan);
+    box-shadow: 
+        0 10px 36px -4px rgba(0, 0, 0, 0.6),
+        0 0 18px -2px rgba(6, 182, 212, 0.15),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel {
+    background: var(--bg-glass-surface);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Automatic Glassmorphism upgrade for existing semantic cards in #info-panel */
+#card-overview,
+#card-soil-composition,
+#card-mission-relevance,
+#metrics-grid > div {
+    background: var(--bg-glass-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: var(--transition-smooth);
+}
+
+#card-overview:hover,
+#card-soil-composition:hover,
+#card-mission-relevance:hover,
+#metrics-grid > div:hover {
+    border-color: var(--border-cyan);
+    box-shadow: 
+        0 6px 24px rgba(0, 0, 0, 0.5),
+        0 0 15px rgba(6, 182, 212, 0.12);
+    transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   4. INTERACTIVE MAP CONTAINER & LEAFLET OVERRIDES (#map)
+   -------------------------------------------------------------------------- */
+#map-section {
+    padding: 0.85rem;
+    background: transparent;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    min-height: calc(100vh - 5.75rem);
+    border-radius: 1rem;
+    background-color: var(--bg-space-deep);
+    border: 1px solid var(--border-cyan);
+    box-shadow: 
+        0 0 28px rgba(6, 182, 212, 0.16),
+        0 0 60px rgba(59, 130, 246, 0.08),
+        inset 0 0 24px rgba(6, 182, 212, 0.12);
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#map:focus-within,
+#map:hover {
+    border-color: rgba(6, 182, 212, 0.6);
+    box-shadow: 
+        0 0 35px rgba(6, 182, 212, 0.25),
+        0 0 70px rgba(59, 130, 246, 0.12),
+        inset 0 0 30px rgba(6, 182, 212, 0.15);
+}
+
+/* Adjust HUD positions cleanly inside padded map-section */
+#map-hud-top {
+    top: 1.75rem;
+    left: 1.75rem;
+}
+
+#map-hud-controls {
+    bottom: 2rem;
+    left: 1.75rem;
+}
+
+/* Dark-Theme Styling for Leaflet Zoom & Attribution Controls */
+.leaflet-control-zoom {
+    border: 1px solid var(--border-cyan) !important;
+    border-radius: 0.5rem !important;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+.leaflet-control-zoom a {
+    background-color: rgba(11, 15, 25, 0.88) !important;
+    backdrop-filter: blur(8px);
+    color: var(--neon-cyan) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+    transition: var(--transition-smooth);
+}
+
+.leaflet-control-zoom a:hover {
+    background-color: rgba(6, 182, 212, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.leaflet-control-attribution {
+    background: rgba(5, 8, 17, 0.75) !important;
+    backdrop-filter: blur(6px);
+    color: #64748b !important;
+    font-family: var(--font-mono);
+    font-size: 10px !important;
+    border-top: 1px solid var(--border-subtle);
+    border-left: 1px solid var(--border-subtle);
+    border-top-left-radius: 0.5rem;
+    padding: 2px 8px !important;
+}
+
+.leaflet-control-attribution a {
+    color: #94a3b8 !important;
+    text-decoration: none;
+}
+
+/* Dark Futuristic Leaflet Popup */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background: rgba(11, 15, 25, 0.92) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-cyan);
+    color: #f1f5f9 !important;
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.25) !important;
+    border-radius: 0.65rem !important;
+    font-family: var(--font-sans);
+}
+
+/* --------------------------------------------------------------------------
+   5. CUSTOM MAP MARKERS & PULSING NEON ANIMATIONS
+   -------------------------------------------------------------------------- */
+.custom-analog-marker {
+    background: transparent;
+    border: none;
+}
+
+.marker-pin-wrapper {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Glowing Core Dot */
+.marker-core {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--neon-cyan);
+    border: 2px solid #ffffff;
+    box-shadow: 
+        0 0 12px var(--neon-cyan),
+        0 0 24px var(--neon-cyan-glow);
+    z-index: 2;
+    transition: transform 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Outer Pulsing Radar Rings */
+.marker-pulse-ring {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, rgba(6, 182, 212, 0) 70%);
+    border: 1.5px solid var(--neon-cyan);
+    animation: telemetry-pulse 2.4s infinite cubic-bezier(0.2, 0.8, 0.4, 1);
+    z-index: 1;
+}
+
+.marker-pulse-ring::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 1px dashed rgba(6, 182, 212, 0.45);
+    animation: orbital-spin 10s linear infinite;
+}
+
+/* Target-Specific Marker Color Variants (Mars vs. Moon) */
+.marker-mars .marker-core {
+    background-color: var(--neon-mars);
+    box-shadow: 0 0 12px var(--neon-mars), 0 0 24px var(--neon-mars-glow);
+}
+
+.marker-mars .marker-pulse-ring {
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.4) 0%, rgba(249, 115, 22, 0) 70%);
+    border-color: var(--neon-mars);
+}
+
+.marker-moon .marker-core {
+    background-color: var(--neon-cyan);
+    box-shadow: 0 0 12px var(--neon-cyan), 0 0 24px var(--neon-cyan-glow);
+}
+
+/* Hover & Active Marker States */
+.marker-pin-wrapper:hover .marker-core,
+.marker-pin-wrapper.active .marker-core {
+    transform: scale(1.35);
+    background-color: #ffffff;
+    box-shadow: 
+        0 0 18px #ffffff,
+        0 0 32px var(--neon-cyan),
+        0 0 48px var(--neon-blue);
+}
+
+.marker-pin-wrapper.active .marker-pulse-ring {
+    border-width: 2px;
+    animation-duration: 1.4s;
+}
+
+/* Keyframe Animations */
+@keyframes telemetry-pulse {
+    0% {
+        transform: scale(0.55);
+        opacity: 0.95;
+    }
+    70% {
+        transform: scale(2.1);
+        opacity: 0.15;
+    }
+    100% {
+        transform: scale(2.4);
+        opacity: 0;
+    }
+}
+
+@keyframes orbital-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   6. SIDEBAR INFO PANEL, PROGRESS BARS & CUSTOM SCROLLBARS
+   -------------------------------------------------------------------------- */
+#info-panel {
+    background: linear-gradient(180deg, rgba(11, 15, 25, 0.96) 0%, rgba(5, 8, 17, 0.98) 100%);
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.55);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(6, 182, 212, 0.35) rgba(5, 8, 17, 0.6);
+}
+
+/* WebKit Custom Thin Futuristic Scrollbar */
+#info-panel::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+#info-panel::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(5, 8, 17, 0.6);
+}
+
+#info-panel::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.45), rgba(59, 130, 246, 0.45));
+    border-radius: 9999px;
+}
+
+#info-panel::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-cyan);
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* Soil Composition Telemetry Bar Styling */
+.composition-bar-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.composition-bar-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, var(--neon-blue) 0%, var(--neon-cyan) 100%);
+    box-shadow: 0 0 10px var(--neon-cyan-glow);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Top Navbar Filter Button Active State */
+.filter-btn.active {
+    background: rgba(6, 182, 212, 0.18);
+    color: #67e8f9;
+    border: 1px solid rgba(6, 182, 212, 0.45);
+    box-shadow: 0 0 14px rgba(6, 182, 212, 0.2);
+}
+
+/* Responsive Adjustments for Mobile / Tablet Viewports */
+@media (max-width: 1023px) {
+    body {
+        overflow-y: auto;
+    }
+
+    #map {
+        min-height: 52vh;
+    }
+
+    #info-panel {
+        height: auto;
+        border-left: none;
+        border-top: 1px solid var(--border-cyan);
+    }
+}
