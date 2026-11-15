@@ -132,9 +132,9 @@
 
         <!-- Filter Tabs -->
         <nav class="flex items-center gap-1 bg-space-950/90 p-1 rounded-lg border border-slate-800">
-            <button id="filter-all" type="button" class="filter-btn active px-3 py-1.5 rounded-md text-xs font-mono font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition cursor-pointer">ALL ANALOGS</button>
-            <button id="filter-mars" type="button" class="filter-btn px-3 py-1.5 rounded-md text-xs font-mono font-medium text-slate-400 hover:text-slate-200 transition cursor-pointer">MARS TARGETS</button>
-            <button id="filter-moon" type="button" class="filter-btn px-3 py-1.5 rounded-md text-xs font-mono font-medium text-slate-400 hover:text-slate-200 transition cursor-pointer">LUNAR TARGETS</button>
+            <button id="filter-all" type="button" class="filter-btn active px-3 py-1.5 rounded-md text-xs font-mono font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition cursor-pointer">ALL ANALOGS (5)</button>
+            <button id="filter-mars" type="button" class="filter-btn px-3 py-1.5 rounded-md text-xs font-mono font-medium text-slate-400 hover:text-slate-200 transition cursor-pointer">MARS TARGETS (3)</button>
+            <button id="filter-moon" type="button" class="filter-btn px-3 py-1.5 rounded-md text-xs font-mono font-medium text-slate-400 hover:text-slate-200 transition cursor-pointer">LUNAR TARGETS (2)</button>
         </nav>
 
         <div class="hidden sm:flex items-center gap-4">
@@ -190,7 +190,7 @@
         </aside>
     </main>
 
-    <!-- APPLICATION LOGIC WITH FIXED FILTERING -->
+    <!-- APPLICATION LOGIC WITH EXPORT MISSION BRIEF FEATURE -->
     <script>
         const analogLocations = [
             {
@@ -336,24 +336,21 @@
             });
         }
 
-        // KESİN VE DOĞRU FİLTRELEME MANTIĞI
-            function getFilteredLocations(filter) {
+        function getFilteredLocations(filter) {
             return analogLocations.filter(loc => {
                 const target = loc.targetBody.trim();
                 if (filter === 'MARS') {
-                    // SADECE saf Mars olanları getir ("Moon & Mars" olanları DAHİL ETME)
                     return target === 'Mars';
                 }
                 if (filter === 'MOON') {
-                    // Sadece içinde Moon geçenleri getir
                     return target.includes('Moon');
                 }
-                return true; // ALL ANALOGS
+                return true;
             });
         }
 
         function createCustomMarkerIcon(location, isActive) {
-            const isMarsOnly = location.targetBody === 'Mars';
+            const isMarsOnly = location.targetBody.trim() === 'Mars';
             return L.divIcon({
                 className: 'custom-analog-marker',
                 html: `
@@ -421,7 +418,7 @@
                 <button type="button" data-id="${loc.id}" class="w-full text-left glass-card p-3.5 flex items-center justify-between group cursor-pointer">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-mono text-cyan-400 font-semibold">${loc.id}</span>
+                            <span class="text-[11px] font-mono ${loc.targetBody === 'Mars' ? 'text-orange-400' : 'text-cyan-400'} font-semibold">${loc.id}</span>
                             <span class="text-xs font-semibold text-slate-100 group-hover:text-cyan-300 transition">${loc.name}</span>
                         </div>
                         <span class="text-[11px] font-mono text-slate-400 block mt-1">Target: ${loc.targetBody}</span>
@@ -454,7 +451,7 @@
 
         function renderLocationDetails(loc) {
             if (!dom.panelContent) return;
-            const isMarsOnly = loc.targetBody === 'Mars';
+            const isMarsOnly = loc.targetBody.trim() === 'Mars';
 
             if (dom.siteTargetBadge) {
                 dom.siteTargetBadge.className = `text-[11px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded border ${isMarsOnly ? 'bg-orange-500/15 text-orange-400 border-orange-500/40' : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'}`;
@@ -495,12 +492,31 @@
                     <h3 class="text-xs font-mono uppercase tracking-wider text-cyan-400 flex items-center gap-2"><i data-lucide="rocket" class="w-4 h-4"></i> Space Agency Utility</h3>
                     <p class="text-sm text-slate-200 leading-relaxed">${loc.spaceAgencyUtility}</p>
                 </article>
+                
+                <!-- NEW: EXPORT MISSION BRIEF BUTTON (JSON DOWNLOAD) -->
+                <button id="btn-export-json" type="button" class="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 py-3 rounded-lg text-xs font-mono font-semibold flex items-center justify-center gap-2 cursor-pointer transition shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>EXPORT MISSION BRIEF (JSON)</span>
+                </button>
             `;
 
+            // Back button event listener
             document.getElementById('back-btn').addEventListener('click', () => {
                 renderWelcomeState();
                 renderMarkers(appState.activeFilter);
             });
+
+            // Export JSON button event listener
+            document.getElementById('btn-export-json').addEventListener('click', () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(loc, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `Vectorlab_Mission_Brief_${loc.id}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            });
+
             if (dom.infoPanel) dom.infoPanel.scrollTo({ top: 0, behavior: 'smooth' });
             lucide.createIcons();
         }

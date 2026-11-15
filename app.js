@@ -535,7 +535,7 @@ function bindUIEvents() {
     }
 
     // UTC Mission Clock
-    const updateClock = () => {
+    const updateClock = ()=> {
         if (!dom.telemetryTimestamp) return;
         const utcString = new Date().toISOString().slice(11, 19);
         dom.telemetryTimestamp.textContent = `UTC: ${utcString}`;
